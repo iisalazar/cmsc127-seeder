@@ -16,12 +16,16 @@ const path = require("path");
  */
 function writeToFile(filename = new Date().toISOString(), content = "") {
   const outDir = "queries";
+  // check if filename exists
+
   fs.writeFileSync(path.join(__dirname, outDir, filename), content);
 }
 
 function main() {
   const FRIEND_COUNT = 10;
   const GROUP_COUNT = 3;
+  const TRANSACTIONS_PER_FRIEND = 25;
+  const TRANSACTIONS_PER_GROUP = 25;
   const DB_NAME = "splitwise_clone";
   const user = userGenerator(
     { person: { fullName: () => "Test user's name" } },
@@ -57,6 +61,7 @@ function main() {
     // add friends to group
     for (const friend of groupFriends) {
       group.addMember(friend);
+      group.addMember(user);
     }
   }
 
@@ -103,29 +108,37 @@ function main() {
   let lastTransactionId = 1;
 
   for (const friend of friends) {
-    const transaction = transactionGenerator(faker, () => lastTransactionId, {
-      lendeeId: user.id,
-      lenderId: friend.id,
-      personId: user.id,
-      grpId: null,
-      getTransactionType: () => "expense",
-    });
-    transactions.push(transaction);
-    lastTransactionId++;
+    for (let i = 0; i < TRANSACTIONS_PER_FRIEND; i++) {
+      const transaction = transactionGenerator(faker, () => lastTransactionId, {
+        lendeeId: user.id,
+        lenderId: friend.id,
+        personId: user.id,
+        grpId: null,
+        getTransactionType: () => (i % 2 === 0 ? "expense" : "payment"),
+      });
+      transactions.push(transaction);
+      lastTransactionId++;
+    }
   }
 
   // create group transactions
   for (const group of groups) {
     for (const member of group.members) {
-      const transaction = transactionGenerator(faker, () => lastTransactionId, {
-        lendeeId: member.id,
-        lenderId: user.id,
-        personId: null,
-        grpId: group.id,
-        getTransactionType: () => "expense",
-      });
-      transactions.push(transaction);
-      lastTransactionId++;
+      for (let i = 0; i < TRANSACTIONS_PER_GROUP; i++) {
+        const transaction = transactionGenerator(
+          faker,
+          () => lastTransactionId,
+          {
+            lendeeId: member.id,
+            lenderId: user.id,
+            personId: null,
+            grpId: group.id,
+            getTransactionType: () => (i % 2 === 0 ? "expense" : "payment"),
+          }
+        );
+        transactions.push(transaction);
+        lastTransactionId++;
+      }
     }
   }
 
@@ -138,7 +151,7 @@ function main() {
     statements.push(transactionStatement);
   }
 
-  writeToFile(`${new Date().toISOString()}.sql`, statements.join("\n"));
+  writeToFile(`insert.sql`, statements.join("\n"));
 }
 
 main();

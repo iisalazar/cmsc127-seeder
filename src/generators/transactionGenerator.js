@@ -22,7 +22,7 @@ function generateTransaction(
   const transaction = new Transaction({
     id: nextId(),
     name: faker.lorem.words(),
-    dateCreated: faker.date.past(),
+    dateCreated: faker.date.between({ from: "2022-01-01", to: new Date() }),
     type: getTransactionType(),
     lenderId,
     lendeeId,
