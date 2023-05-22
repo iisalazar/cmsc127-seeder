@@ -4,7 +4,7 @@ const { Transaction } = require("../entities");
  *
  * @param {any} faker
  * @param {() => number} nextId
- * @param {{lenderId: number, lendeeId: number, personId: number, groupId: number, getTransactionType: () => string} | undefined} data
+ * @param {{lenderId: number, lendeeId: number, personId: number, grpId: number, getTransactionType: () => string} | undefined} data
  * @returns {Transaction}
  */
 function generateTransaction(
@@ -14,7 +14,7 @@ function generateTransaction(
     lenderId,
     lendeeId,
     personId,
-    groupId,
+    grpId,
     getTransactionType = () =>
       faker.random.arrayElement(["expense", "payment"]),
   }
@@ -23,12 +23,12 @@ function generateTransaction(
     id: nextId(),
     name: faker.lorem.words(),
     dateCreated: faker.date.past(),
-    transactionType: getTransactionType(),
+    type: getTransactionType(),
     lenderId,
     lendeeId,
     amount: faker.number.int({ min: 5, max: 1000 }),
     personId,
-    groupId,
+    grpId,
   });
 
   return transaction;

@@ -4,12 +4,12 @@
  * @property {number} id
  * @property {string} name
  * @property {Date} dateCreated
- * @property {string} transactionType
+ * @property {string} type
  * @property {number} lenderId
  * @property {number} lendeeId
  * @property {number} amount
  * @property {number | null} personId
- * @property {number | null} groupId
+ * @property {number | null} grpId
  */
 class Transaction {
   constructor(transaction) {
@@ -17,23 +17,23 @@ class Transaction {
       id,
       name,
       dateCreated,
-      transactionType,
+      type,
       lenderId,
       lendeeId,
       amount,
       personId = null,
-      groupId = null,
+      grpId = null,
     } = transaction;
     Object.assign(this, {
       id,
       name,
       dateCreated,
-      transactionType,
+      type,
       lenderId,
       lendeeId,
       amount,
       personId,
-      groupId,
+      grpId,
     });
   }
 }

@@ -17,7 +17,9 @@ function jsToSqlType(value) {
   }
   // for dates
   if (typeof value === "object" && value instanceof Date) {
-    return `'${value.toISOString()}'`;
+    // convert js iso string to sql iso string
+    return `STR_TO_DATE('${value.toISOString()}', '%Y-%m-%dT%H:%i:%s.%fZ')`;
+    // return `'${value.toISOString()}'`;
   }
 
   // for nulls or undefined

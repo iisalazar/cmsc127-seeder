@@ -20,6 +20,9 @@ function writeToFile(filename = new Date().toISOString(), content = "") {
 }
 
 function main() {
+  const FRIEND_COUNT = 10;
+  const GROUP_COUNT = 3;
+  const DB_NAME = "splitwise_clone";
   const user = userGenerator(
     { person: { fullName: () => "Test user's name" } },
     () => 1
@@ -29,7 +32,7 @@ function main() {
    */
   const friends = [];
 
-  for (let i = 2; i < 20; i++) {
+  for (let i = 2; i < FRIEND_COUNT; i++) {
     const friend = friendGenerator(faker, () => i);
     friends.push(friend);
   }
@@ -38,7 +41,7 @@ function main() {
    */
   const groups = [];
 
-  for (let i = 0; i < 3; i++) {
+  for (let i = 1; i <= GROUP_COUNT; i++) {
     const group = groupGenerator(faker, () => i);
     groups.push(group);
   }
@@ -59,6 +62,9 @@ function main() {
 
   const statements = [];
 
+  statements.push(`CREATE DATABASE IF NOT EXISTS ${DB_NAME};`);
+  statements.push(`USE ${DB_NAME};`);
+
   // build insert statement for user
   const userStatement = queryBuilder.buildInsertStatement("person", user);
   statements.push(userStatement);
@@ -74,16 +80,16 @@ function main() {
 
   for (const element of groups) {
     const { members, ...group } = element;
-    const groupStatement = queryBuilder.buildInsertStatement("group", group);
+    const groupStatement = queryBuilder.buildInsertStatement("grp", group);
     statements.push(groupStatement);
     // generate junction table
 
     for (const member of members) {
       const junctionStatement = queryBuilder.buildInsertStatement(
-        "group_member",
+        "person_grp",
         {
-          group_id: group.id,
-          member_id: member.id,
+          grpId: group.id,
+          personId: member.id,
         }
       );
       statements.push(junctionStatement);
@@ -93,25 +99,34 @@ function main() {
   // create transactions for user and friends
 
   const transactions = [];
-  transactions.push(
-    transactionGenerator(faker, () => 1, {
-      lendeeId: user.id,
-      lenderId: null,
-      personId: null,
-      groupId: null,
-      getTransactionType: () => "payment",
-    })
-  );
+
+  let lastTransactionId = 1;
 
   for (const friend of friends) {
-    const transaction = transactionGenerator(faker, () => 1, {
+    const transaction = transactionGenerator(faker, () => lastTransactionId, {
       lendeeId: user.id,
       lenderId: friend.id,
-      personId: null,
-      groupId: null,
+      personId: user.id,
+      grpId: null,
       getTransactionType: () => "expense",
     });
     transactions.push(transaction);
+    lastTransactionId++;
+  }
+
+  // create group transactions
+  for (const group of groups) {
+    for (const member of group.members) {
+      const transaction = transactionGenerator(faker, () => lastTransactionId, {
+        lendeeId: member.id,
+        lenderId: user.id,
+        personId: null,
+        grpId: group.id,
+        getTransactionType: () => "expense",
+      });
+      transactions.push(transaction);
+      lastTransactionId++;
+    }
   }
 
   // build insert statements for transactions
